@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0"><dict>
+  <key>CFBundleDevelopmentRegion</key><string>en</string>
+  <key>CFBundleDisplayName</key><string>SuperSpock</string>
+  <key>CFBundleExecutable</key><string>SuperSpock</string>
+  <key>CFBundleIdentifier</key><string>org.touchinbutts.superspock</string>
+  <key>CFBundleInfoDictionaryVersion</key><string>6.0</string>
+  <key>CFBundleName</key><string>SuperSpock</string>
+  <key>CFBundlePackageType</key><string>APPL</string>
+  <key>CFBundleShortVersionString</key><string>0.4.1-alpha</string>
+  <key>CFBundleVersion</key><string>401</string>
+  <key>LSMinimumSystemVersion</key><string>15.0</string>
+  <key>NSHighResolutionCapable</key><true/>
+  <key>NSMicrophoneUsageDescription</key><string>SuperSpock uses the microphone only when sending audio to your GLKVM device.</string>
+  <key>NSPrincipalClass</key><string>NSApplication</string>
+</dict></plist>
