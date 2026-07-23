@@ -4,6 +4,7 @@
   <key>CFBundleDevelopmentRegion</key><string>en</string>
   <key>CFBundleDisplayName</key><string>SuperSpock</string>
   <key>CFBundleExecutable</key><string>SuperSpock</string>
+  <key>CFBundleIconFile</key><string>AppIcon</string>
   <key>CFBundleIdentifier</key><string>org.touchinbutts.superspock</string>
   <key>CFBundleInfoDictionaryVersion</key><string>6.0</string>
   <key>CFBundleName</key><string>SuperSpock</string>

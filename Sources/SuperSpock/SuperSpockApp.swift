@@ -1,7 +1,19 @@
 import SwiftUI
 
+// When launched as a bare executable (swift run) instead of a .app bundle,
+// macOS treats the process as a background agent: no Dock icon, and the
+// window never reliably becomes key, so typing goes nowhere. Forcing the
+// regular activation policy fixes both.
+final class ActivationDelegate: NSObject, NSApplicationDelegate {
+    func applicationDidFinishLaunching(_ notification: Notification) {
+        NSApp.setActivationPolicy(.regular)
+        NSApp.activate()
+    }
+}
+
 @main
 struct SuperSpockApp: App {
+    @NSApplicationDelegateAdaptor(ActivationDelegate.self) private var activationDelegate
     @State private var model = AppModel()
 
     var body: some Scene {
