@@ -112,6 +112,22 @@ actor KVMClient {
         return "unrecognized response"
     }
 
+    /// GLKVM's TURN credential endpoint, used to give the native WebRTC
+    /// peer connection relay candidates when the two ends can't reach each
+    /// other directly (verified live: `/api/turn/get_turn` returns 401
+    /// without the auth cookie, 200 with it, matching `/api/auth/check`).
+    func fetchTurnCredentials() async throws -> TurnCredentials {
+        guard let baseURL, let session else { throw ClientError.notConfigured }
+        let request = URLRequest(url: baseURL.appendingPathComponent("api/turn/get_turn"))
+        let (data, response) = try await session.data(for: request)
+        guard let http = response as? HTTPURLResponse, (200..<300).contains(http.statusCode) else { throw ClientError.invalidResponse }
+        struct Wrapper: Decodable { let result: TurnCredentials }
+        return try JSONDecoder().decode(Wrapper.self, from: data).result
+    }
+
+    func currentHost() -> String? { baseURL?.host }
+    func currentAuthToken() -> String? { authToken }
+
     func disconnect() { webSocket?.cancel(with: .normalClosure, reason: nil); webSocket = nil; session?.invalidateAndCancel(); session = nil; authToken = nil }
 }
 

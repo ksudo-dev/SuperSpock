@@ -50,12 +50,8 @@ struct RemoteCanvas: View {
     var body: some View {
         ZStack {
             Color.black
-            if let token = model.mediaToken, let endpoint = URL(string: model.device.endpoint) {
-                GLKVMMediaView(endpoint: endpoint, authToken: token, scaleMode: model.scaleMode) { resolution, bitrate in
-                    model.metrics.resolution = resolution
-                    model.metrics.bitrateMbps = bitrate
-                    model.statusMessage = "Streaming securely over Tailscale"
-                }
+            if let videoView = model.webRTC.videoView {
+                NativeVideoView(videoView: videoView, scaleMode: model.scaleMode)
             } else if let frame = model.frame { Image(decorative: frame, scale: 1).resizable().aspectRatio(contentMode: model.scaleMode == .fill ? .fill : .fit) }
             else { EmptySessionView() }
             if model.showStats && model.state == .connected { StatsOverlay().frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading).padding() }
@@ -83,8 +79,9 @@ struct EmptySessionView: View {
                 }
             case .authenticated:
                 VStack(spacing: 9) {
-                    Label("Authentication succeeded", systemImage: "checkmark.shield.fill").foregroundStyle(.green)
-                    Text("The native video transport is not implemented yet. No frames are being received.").foregroundStyle(.orange).multilineTextAlignment(.center)
+                    Label("Authenticated", systemImage: "checkmark.shield.fill").foregroundStyle(.green)
+                    Text("Negotiating native WebRTC video…").foregroundStyle(.secondary)
+                    ProgressView()
                 }
             default: Button("Connect") { model.connect() }.buttonStyle(.borderedProminent).controlSize(.large)
             }

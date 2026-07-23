@@ -45,6 +45,7 @@ final class AppModel {
     var diagnosticEvents: [String] = []
     var selectedInspectorTab = InspectorTab.session
     let client = KVMClient()
+    let webRTC = JanusWebRTCManager()
 
     init() {
         if let data = UserDefaults.standard.data(forKey: "device"), let saved = try? JSONDecoder().decode(KVMDevice.self, from: data) { device = saved }
@@ -65,11 +66,23 @@ final class AppModel {
                 state = .authenticating
                 record("TLS trust and GLKVM authentication started")
                 mediaToken = try await client.connect(to: device.endpoint)
-                state = .connected
-                statusMessage = "Connected — loading GLKVM media transport"
-                metrics = .init()
                 record("GLKVM token received")
-                record("Authenticated GLKVM WebRTC media surface started")
+                state = .authenticated
+                guard let host = await client.currentHost(), let token = await client.currentAuthToken() else {
+                    throw ClientError.invalidResponse
+                }
+                statusMessage = "Negotiating native WebRTC video…"
+                record("Opening Janus signaling channel")
+                let turnCredentials = try? await client.fetchTurnCredentials()
+                if turnCredentials == nil { record("No TURN credentials — falling back to STUN only") }
+                await webRTC.connect(host: host, authToken: token, turnCredentials: turnCredentials)
+                if webRTC.connectionState == .failed {
+                    throw ClientError.invalidResponse
+                }
+                state = .connected
+                statusMessage = "Streaming natively over WebRTC"
+                metrics = .init()
+                record("Native Janus/WebRTC video session established")
             } catch {
                 state = .failed(error.localizedDescription); statusMessage = error.localizedDescription; record("Failure: \(error.localizedDescription)")
             }
@@ -77,7 +90,7 @@ final class AppModel {
     }
 
 
-    func disconnect() { Task { await client.disconnect() }; mediaToken = nil; state = .disconnected; statusMessage = "Disconnected"; metrics = .init() }
+    func disconnect() { Task { await client.disconnect() }; webRTC.disconnect(); mediaToken = nil; state = .disconnected; statusMessage = "Disconnected"; metrics = .init() }
     func sendControlAltDelete() { Task { try? await client.sendKeySequence(["ControlLeft", "AltLeft", "Delete"]) } }
 
     func record(_ event: String) {
@@ -99,10 +112,10 @@ final class AppModel {
         Status: \(statusMessage)
         TLS: system trust evaluation required
         Authentication: \(state == .authenticated || state == .connected ? "succeeded" : "not confirmed")
-        Media surface: \(mediaToken == nil ? "not running" : "authenticated GLKVM WebRTC")
-        Video transport: WebRTC/Janus in isolated WebKit media surface
-        Audio transport: GLKVM WebRTC
-        Control transport: GLKVM WebSocket/WebRTC data path
+        Media surface: \(mediaToken == nil ? "not running" : "authenticated GLKVM Janus session")
+        Video transport: native WebRTC (stasel/WebRTC, janus.plugin.ustreamer)
+        Janus connection state: \(webRTC.connectionState)
+        Control transport: GLKVM HID WebSocket (/api/ws)
 
         Event log:
         \(diagnosticEvents.isEmpty ? "No events recorded" : diagnosticEvents.joined(separator: "\n"))
