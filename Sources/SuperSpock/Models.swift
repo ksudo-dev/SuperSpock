@@ -8,7 +8,10 @@ enum QualityProfile: String, CaseIterable, Identifiable, Codable { case responsi
 struct KVMDevice: Codable, Hashable, Identifiable {
     var id = UUID()
     var name = "SuperSpock"
-    var endpoint = "https://superspock.example-tailnet.ts.net"
+    /// Empty by default so a fresh install prompts for the device address in
+    /// Settings rather than shipping anyone's private hostname. Use the HTTPS
+    /// name the device's certificate is issued for.
+    var endpoint = ""
 }
 
 struct SessionMetrics: Equatable {

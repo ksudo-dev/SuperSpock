@@ -5,10 +5,10 @@ import WebRTC
 ///
 /// Protocol confirmed by reading GLKVM's own web frontend behavior and
 /// cross-checked against another open-source GLKVM client (rcawston/Overlook,
-/// GPLv3 — same license as this project), then verified live against
-/// your-glkvm-device.local: `wss://<host>/janus/ws` with `Sec-WebSocket-Protocol:
-/// janus-protocol`, session create -> attach `janus.plugin.ustreamer` ->
-/// "watch" -> jsep offer/answer -> trickle ICE -> 25s keepalive.
+/// GPLv3 — same license as this project), then verified against a live RM1:
+/// `wss://<host>/janus/ws` with `Sec-WebSocket-Protocol: janus-protocol`,
+/// session create -> attach `janus.plugin.ustreamer` -> "watch" -> jsep
+/// offer/answer -> trickle ICE -> 25s keepalive.
 @MainActor
 final class JanusWebRTCManager: NSObject, ObservableObject {
     @Published var videoView: RTCMTLNSVideoView?
