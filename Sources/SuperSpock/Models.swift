@@ -56,6 +56,7 @@ final class AppModel {
     init() {
         if let data = UserDefaults.standard.data(forKey: "device"), let saved = try? JSONDecoder().decode(KVMDevice.self, from: data) { device = saved }
         else { device = KVMDevice() }
+        webRTC.onEvent = { [weak self] event in self?.record(event) }
     }
 
     func saveDevice() {

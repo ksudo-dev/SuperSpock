@@ -11,7 +11,23 @@ final class ActivationDelegate: NSObject, NSApplicationDelegate {
     }
 }
 
+// Entry point dispatch: `SuperSpock --probe <https-endpoint>` runs the full
+// auth + Janus/WebRTC handshake headless and prints every signaling step,
+// so the negotiation can be debugged from a terminal without Xcode.
 @main
+enum Main {
+    static func main() {
+        if let probeIndex = CommandLine.arguments.firstIndex(of: "--probe") {
+            let endpoint = CommandLine.arguments.indices.contains(probeIndex + 1)
+                ? CommandLine.arguments[probeIndex + 1]
+                : ""
+            ProbeRunner.run(endpoint: endpoint, allowInsecureTLS: CommandLine.arguments.contains("--insecure"))
+        } else {
+            SuperSpockApp.main()
+        }
+    }
+}
+
 struct SuperSpockApp: App {
     @NSApplicationDelegateAdaptor(ActivationDelegate.self) private var activationDelegate
     @State private var model = AppModel()

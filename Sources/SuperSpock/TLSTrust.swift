@@ -19,7 +19,7 @@ import Foundation
 /// connection cannot prove the box answering is actually your KVM, which
 /// matters because this app sends an admin password over it. Prefer the
 /// Tailscale name when you can.
-final class TLSTrustDelegate: NSObject, URLSessionDelegate, @unchecked Sendable {
+class TLSTrustDelegate: NSObject, URLSessionDelegate, @unchecked Sendable {
     private let allowInsecure: Bool
 
     init(allowInsecure: Bool) {
