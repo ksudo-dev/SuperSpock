@@ -6,19 +6,28 @@ actor KVMClient {
     private var session: URLSession?
     private var authToken: String?
 
-    func connect(to endpoint: String) async throws -> String {
+    func connect(to endpoint: String, allowInsecureTLS: Bool = false) async throws -> String {
         guard let url = URL(string: endpoint), url.scheme == "https" else { throw ClientError.invalidEndpoint }
         baseURL = url
         let config = URLSessionConfiguration.ephemeral
         config.timeoutIntervalForRequest = 12
         config.httpCookieAcceptPolicy = .always
         config.httpShouldSetCookies = true
-        let session = URLSession(configuration: config)
+        let session = URLSession(
+            configuration: config,
+            delegate: TLSTrustDelegate(allowInsecure: allowInsecureTLS),
+            delegateQueue: nil
+        )
         self.session = session
 
         var request = URLRequest(url: url.appendingPathComponent("api/auth/check"))
         request.httpMethod = "GET"
-        let (_, response) = try await session.data(for: request)
+        let (_, response): (Data, URLResponse)
+        do {
+            (_, response) = try await session.data(for: request)
+        } catch let error as URLError where Self.isTLSTrustFailure(error) {
+            throw ClientError.tlsUntrusted(host: url.host ?? endpoint)
+        }
         guard let http = response as? HTTPURLResponse else { throw ClientError.invalidResponse }
         if http.statusCode == 401 || http.statusCode == 403 { try await authenticate() }
         else if !(200..<400).contains(http.statusCode) { throw ClientError.http(http.statusCode) }
@@ -128,13 +137,31 @@ actor KVMClient {
     func currentHost() -> String? { baseURL?.host }
     func currentAuthToken() -> String? { authToken }
 
+    /// URLSession reports a rejected server certificate as a small set of
+    /// related codes rather than one; treat them all as the same failure so
+    /// the user gets an actionable message instead of "operation failed".
+    static func isTLSTrustFailure(_ error: URLError) -> Bool {
+        switch error.code {
+        case .serverCertificateUntrusted,
+             .serverCertificateHasBadDate,
+             .serverCertificateHasUnknownRoot,
+             .serverCertificateNotYetValid,
+             .secureConnectionFailed,
+             .clientCertificateRejected:
+            return true
+        default:
+            return false
+        }
+    }
+
     func disconnect() { webSocket?.cancel(with: .normalClosure, reason: nil); webSocket = nil; session?.invalidateAndCancel(); session = nil; authToken = nil }
 }
 
 enum ClientError: LocalizedError {
-    case invalidEndpoint, invalidResponse, notConfigured, notConnected, credentialsRequired, authenticationFailed, authenticationRejected(status: Int, category: String), invalidAuthenticationResponse, http(Int)
+    case invalidEndpoint, invalidResponse, notConfigured, notConnected, credentialsRequired, authenticationFailed, authenticationRejected(status: Int, category: String), invalidAuthenticationResponse, http(Int), tlsUntrusted(host: String)
     var errorDescription: String? {
         switch self {
+        case .tlsUntrusted(let host): "\(host) presented a certificate macOS does not trust. GLKVM devices only have a valid certificate on their Tailscale name — over a LAN address or .local name they serve a self-signed one. Use the Tailscale hostname, or enable “Allow untrusted certificates” in Settings."
         case .invalidEndpoint: "Enter a valid HTTPS GLKVM address."
         case .invalidResponse: "The device returned an invalid response."
         case .notConfigured: "The connection is not configured."

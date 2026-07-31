@@ -31,7 +31,7 @@ final class JanusWebRTCManager: NSObject, ObservableObject {
     /// an internal thread), so boxing them across the hop is safe.
     struct JanusMessageBox: @unchecked Sendable { let value: [String: Any] }
 
-    func connect(host: String, authToken: String, turnCredentials: TurnCredentials?) async {
+    func connect(host: String, authToken: String, turnCredentials: TurnCredentials?, allowInsecureTLS: Bool = false) async {
         disconnect()
         connectionState = .connecting
 
@@ -58,7 +58,7 @@ final class JanusWebRTCManager: NSObject, ObservableObject {
         peerConnection = connection
 
         do {
-            try await connectSignaling(host: host, authToken: authToken)
+            try await connectSignaling(host: host, authToken: authToken, allowInsecureTLS: allowInsecureTLS)
             connectionState = .connected
         } catch {
             lastError = String(describing: error)
@@ -81,15 +81,22 @@ final class JanusWebRTCManager: NSObject, ObservableObject {
 
     // MARK: - Signaling
 
-    private func connectSignaling(host: String, authToken: String) async throws {
+    private func connectSignaling(host: String, authToken: String, allowInsecureTLS: Bool) async throws {
         var components = URLComponents()
         components.scheme = "wss"
         components.host = host
         components.path = "/janus/ws"
         guard let url = components.url else { throw JanusError.invalidEndpoint }
 
+        // The signaling socket needs the same trust policy as the HTTP API —
+        // a self-signed LAN certificate fails here too, and silently, which
+        // looks like "authenticated but no video" rather than a TLS problem.
         let config = URLSessionConfiguration.ephemeral
-        let session = URLSession(configuration: config)
+        let session = URLSession(
+            configuration: config,
+            delegate: TLSTrustDelegate(allowInsecure: allowInsecureTLS),
+            delegateQueue: nil
+        )
         self.session = session
 
         var request = URLRequest(url: url)
@@ -138,7 +145,7 @@ final class JanusWebRTCManager: NSObject, ObservableObject {
         keepAliveTask = Task { [weak self] in
             while !Task.isCancelled {
                 try? await Task.sleep(nanoseconds: 25_000_000_000)
-                guard let self, let sessionId = await self.sessionId else { return }
+                guard let self, let sessionId = self.sessionId else { return }
                 try? await self.sendFireAndForget(["janus": "keepalive", "session_id": sessionId, "transaction": Self.makeTransaction()])
             }
         }

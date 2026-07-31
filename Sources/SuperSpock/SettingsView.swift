@@ -22,7 +22,12 @@ struct SettingsView: View {
             Form {
                 TextField("Display name", text: $model.device.name)
                 TextField("GLKVM address", text: $model.device.endpoint)
-                Text("Use the exact HTTPS Tailscale hostname. The certificate is validated automatically by macOS.").font(.caption).foregroundStyle(.secondary)
+                Text("Use the exact HTTPS Tailscale hostname — Tailscale issues a real certificate for it, so macOS validates it normally.").font(.caption).foregroundStyle(.secondary)
+                Toggle("Allow untrusted certificates", isOn: $model.allowInsecureTLS)
+                VStack(alignment: .leading, spacing: 5) {
+                    Text("Only needed for LAN addresses. Reached by IP or .local name, a GLKVM device serves its own self-signed certificate issued for “localhost”, which can never validate.")
+                    Text("Leaving this off is safer: an unvalidated connection cannot prove the device answering is really your KVM, and this app sends your admin password over it.")
+                }.font(.caption).foregroundStyle(.secondary)
                 Button("Save Connection") { model.saveDevice(); savedMessage = "Connection saved" }
             }.padding().tabItem { Label("Connection", systemImage: "network") }
             Form {

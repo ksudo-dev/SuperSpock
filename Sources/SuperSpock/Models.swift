@@ -41,6 +41,9 @@ final class AppModel {
     var microphoneMuted = true
     var volume = 0.75
     var reconnectAutomatically = true
+    var allowInsecureTLS = UserDefaults.standard.bool(forKey: "allowInsecureTLS") {
+        didSet { UserDefaults.standard.set(allowInsecureTLS, forKey: "allowInsecureTLS") }
+    }
     var metrics = SessionMetrics()
     var frame: CGImage?
     var mediaToken: String?
@@ -68,7 +71,7 @@ final class AppModel {
             do {
                 state = .authenticating
                 record("TLS trust and GLKVM authentication started")
-                mediaToken = try await client.connect(to: device.endpoint)
+                mediaToken = try await client.connect(to: device.endpoint, allowInsecureTLS: allowInsecureTLS)
                 record("GLKVM token received")
                 state = .authenticated
                 guard let host = await client.currentHost(), let token = await client.currentAuthToken() else {
@@ -78,7 +81,7 @@ final class AppModel {
                 record("Opening Janus signaling channel")
                 let turnCredentials = try? await client.fetchTurnCredentials()
                 if turnCredentials == nil { record("No TURN credentials — falling back to STUN only") }
-                await webRTC.connect(host: host, authToken: token, turnCredentials: turnCredentials)
+                await webRTC.connect(host: host, authToken: token, turnCredentials: turnCredentials, allowInsecureTLS: allowInsecureTLS)
                 if webRTC.connectionState == .failed {
                     throw ClientError.invalidResponse
                 }
