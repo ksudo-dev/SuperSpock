@@ -69,7 +69,7 @@ struct DiagnosticsPanel: View {
     @Environment(AppModel.self) private var model
     var body: some View {
         Form {
-            Section("Live Statistics") { LabeledContent("Resolution", value: model.metrics.resolution); LabeledContent("Bitrate", value: model.metrics.bitrateMbps == 0 ? "Waiting for stream" : String(format: "%.2f Mbps", model.metrics.bitrateMbps)); LabeledContent("Route", value: "P2P"); LabeledContent("Video transport", value: "WebRTC / Janus") }
+            Section("Live Statistics") { LabeledContent("Resolution", value: model.metrics.resolution); LabeledContent("Bitrate", value: model.metrics.bitrateMbps == 0 ? "Waiting for stream" : String(format: "%.2f Mbps", model.metrics.bitrateMbps)); LabeledContent("Route", value: "P2P"); LabeledContent("Video transport", value: "WebRTC / Pion") }
             Section { Button("Copy Diagnostic Summary") { NSPasteboard.general.clearContents(); NSPasteboard.general.setString(model.diagnosticSummary, forType: .string) } }
         }.formStyle(.grouped)
     }

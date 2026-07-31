@@ -79,7 +79,7 @@ final class AppModel {
                     throw ClientError.invalidResponse
                 }
                 statusMessage = "Negotiating native WebRTC video…"
-                record("Opening Janus signaling channel")
+                record("Opening Pion signaling channel")
                 let turnCredentials = try? await client.fetchTurnCredentials()
                 if turnCredentials == nil { record("No TURN credentials — falling back to STUN only") }
                 await webRTC.connect(host: host, authToken: token, turnCredentials: turnCredentials, allowInsecureTLS: allowInsecureTLS)
@@ -89,7 +89,7 @@ final class AppModel {
                 state = .connected
                 statusMessage = "Streaming natively over WebRTC"
                 metrics = .init()
-                record("Native Janus/WebRTC video session established")
+                record("Native Pion/WebRTC video session established")
             } catch {
                 state = .failed(error.localizedDescription); statusMessage = error.localizedDescription; record("Failure: \(error.localizedDescription)")
             }
@@ -119,9 +119,9 @@ final class AppModel {
         Status: \(statusMessage)
         TLS: system trust evaluation required
         Authentication: \(state == .authenticated || state == .connected ? "succeeded" : "not confirmed")
-        Media surface: \(mediaToken == nil ? "not running" : "authenticated GLKVM Janus session")
-        Video transport: native WebRTC (stasel/WebRTC, janus.plugin.ustreamer)
-        Janus connection state: \(webRTC.connectionState)
+        Media surface: \(mediaToken == nil ? "not running" : "authenticated GLKVM Pion session")
+        Video transport: native WebRTC (stasel/WebRTC, GL.iNet Pion gateway)
+        Pion connection state: \(webRTC.connectionState)
         Control transport: GLKVM HID WebSocket (/api/ws)
 
         Event log:

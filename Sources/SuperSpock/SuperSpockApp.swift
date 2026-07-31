@@ -12,7 +12,7 @@ final class ActivationDelegate: NSObject, NSApplicationDelegate {
 }
 
 // Entry point dispatch: `SuperSpock --probe <https-endpoint>` runs the full
-// auth + Janus/WebRTC handshake headless and prints every signaling step,
+// auth + Pion/WebRTC handshake headless and prints every signaling step,
 // so the negotiation can be debugged from a terminal without Xcode.
 @main
 enum Main {

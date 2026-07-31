@@ -1,7 +1,7 @@
 import Foundation
 
 /// Headless diagnostic: authenticates with the saved vault credentials, runs
-/// the complete Janus/WebRTC negotiation, and prints every signaling step.
+/// the complete Pion/WebRTC negotiation, and prints every signaling step.
 /// Exits 0 once a video track arrives and ICE connects; nonzero otherwise.
 ///
 ///     .build/debug/SuperSpock --probe https://<device-hostname> [--insecure]
