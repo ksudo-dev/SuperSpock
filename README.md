@@ -1,15 +1,20 @@
 # SuperSpock
 
-Native macOS GLKVM client for the GL.iNet Comet RM1, designed around a Screen Sharing-style window rather than an embedded browser.
+"SuperSpock" is the current codename for a native macOS GLKVM client for the GL.iNet Comet RM1. The name may change before a first release. The app is built around a Screen Sharing-style window rather than an embedded browser.
 
-> **Status: work in progress.** It builds, runs, authenticates, and the native
-> WebRTC video path is confirmed working against a live RM1: offer received,
-> ICE connected, video track attached. Input is not wired to the video surface
-> yet, so treat it as a working draft, not a finished tool.
+> **Status: work in progress.** The app builds, runs, authenticates, and receives
+> a native WebRTC video track from a live RM1. The probe recorded an offer, ICE
+> connected, and the video track attached. Input is not wired to the video
+> surface yet, so this is a working draft, not a finished tool.
 >
 > If you want a native GLKVM client that already works today, use
 > [rcawston/Overlook](https://github.com/rcawston/Overlook). It has working
 > input, OCR capture, and device discovery that this project does not.
+
+## Links
+
+- Field note: https://sudo-dev.com/superspock-kvm-client
+- Sudo-Dev: https://sudo-dev.com
 
 ## Open in Xcode
 
